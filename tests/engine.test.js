@@ -1,0 +1,21 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {createRound,pickCard,resolvePick,tickRound,showClue,finishRound} from '../src/gameplay/engine.js';
+const mk=(mode='solo')=>createRound({pairs:[['cat','mèo'],['dog','chó']],mode,rareKeys:[1],clue:3});
+test('creates a 30 second round with pair tracking',()=>{const r=mk();assert.equal(r.t,30);assert.equal(r.t_.length,4);assert.equal(r.total,2);});
+test('rejects malformed and duplicate card orders',()=>{assert.throws(()=>createRound({pairs:[]}));assert.throws(()=>createRound({pairs:[['a','b']],order:[0,0]}));});
+test('one pair is scored exactly once and double taps are ignored',()=>{const r=mk();assert.equal(pickCard(r,0).type,'first');assert.equal(pickCard(r,0).accepted,false);const a=pickCard(r,1);assert.equal(a.type,'match');assert.equal(pickCard(r,2).accepted,false);assert.equal(resolvePick(r).matched,true);assert.equal(r.pairs,1);assert.equal(r.earnedPairs,10);assert.equal(pickCard(r,0).accepted,false);});
+test('miss resets combo and cards without awarding points',()=>{const r=mk();pickCard(r,0);assert.equal(pickCard(r,2).type,'miss');assert.equal(r.mis,1);assert.deepEqual(r.missedKeys,[0,1]);assert.equal(resolvePick(r).matched,false);assert.equal(r.earnedPairs,0);assert.equal(r.combo,0);});
+test('combo and rare pair calculate bonuses',()=>{const r=mk();pickCard(r,0);pickCard(r,1);resolvePick(r);pickCard(r,2);const a=pickCard(r,3);assert.equal(a.gain,40);resolvePick(r);assert.equal(r.bonusPoints,30);assert.equal(r.earnedPairs,50);});
+test('timer expires at zero, never below zero',()=>{const r=mk();assert.equal(tickRound(r,30).expired,true);assert.equal(r.t,0);assert.equal(tickRound(r).expired,false);assert.equal(pickCard(r,0).accepted,false);});
+test('review mode does not tick or award points',()=>{const r=mk('review');tickRound(r);assert.equal(r.t,30);pickCard(r,0);pickCard(r,1);resolvePick(r);assert.equal(r.earnedPairs,0);assert.equal(finishRound(r,'complete').earned,undefined);});
+test('challenge mode disables clues',()=>{const r=mk('challenge');assert.equal(r.clue,0);assert.equal(showClue(r),false);});
+test('clue shows an unmatched pair without marking it complete',()=>{const r=mk();assert.equal(showClue(r),true);assert.deepEqual(r.h,[0,1]);assert.equal(r.pairs,0);});
+test('result scoring and completion are deterministic',()=>{const r=mk();pickCard(r,0);pickCard(r,1);resolvePick(r);pickCard(r,2);pickCard(r,3);assert.equal(resolvePick(r).completed,true);const res=finishRound(r,'complete');assert.equal(res.earned,190);assert.equal(res.perfect,true);assert.equal(pickCard(r,0).accepted,false);});
+test('ending a match never grants a completion bonus',()=>{const r=mk();assert.equal(finishRound(r,'ended').earned,undefined);});
+test('difficult rewards stack with combos but never double count a rare word',()=>{
+ const r=createRound({pairs:[['a','A'],['b','B']],difficultKeys:[0,1],rareKeys:[1]});
+ pickCard(r,0);const difficult=pickCard(r,1);assert.equal(difficult.gain,25);assert.equal(difficult.difficult,true);resolvePick(r);
+ pickCard(r,2);const rare=pickCard(r,3);assert.equal(rare.gain,40);assert.equal(rare.difficult,false);assert.equal(r.lastComboBonus,5);resolvePick(r);
+ assert.equal(r.bonusPoints,45);assert.equal(r.earnedPairs,65);
+});
