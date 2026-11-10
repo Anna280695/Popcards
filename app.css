@@ -1,0 +1,29 @@
+/* Application shell: leave the source character artwork, typography, and game styling intact. */
+html,body{width:100%;min-height:100%;overscroll-behavior:none}
+body{margin:0;padding:0;gap:0;display:flex;align-items:center;justify-content:center;background:#f3f3f3}
+.side{display:none!important}
+.stage{width:100%;max-width:none;gap:0;min-height:100dvh;display:flex;justify-content:center}
+.phone{width:min(100%,480px);max-width:480px;height:100dvh;min-height:0;border:0;border-radius:0;box-shadow:none;padding-top:max(12px,env(safe-area-inset-top));padding-left:17px;padding-right:17px}
+.phone .foot{padding-bottom:max(12px,env(safe-area-inset-bottom))}
+.phone .round-dock{padding-bottom:max(9px,env(safe-area-inset-bottom))}
+.online-backdrop{position:absolute}
+@media(min-width:600px){body{background:#e9e9ed}.stage{max-width:480px;min-height:0}.phone{height:min(900px,calc(100dvh - 40px));border:2px solid #e3e3e5;border-radius:30px;box-shadow:0 20px 65px #2424241a}}
+/* Retain a special /?preview layout for visual QA without exposing it in the app. */
+body:has(#side:not(:empty)){gap:24px;padding:20px;align-items:flex-start}
+body:has(#side:not(:empty)) .side{display:flex!important}
+body:has(#side:not(:empty)) .stage{width:400px;min-height:0}
+body:has(#side:not(:empty)) .phone{height:min(720px,calc(100dvh - 40px))}
+@media(max-width:700px){body:has(#side:not(:empty)){display:block;padding:8px}body:has(#side:not(:empty)) .stage{width:100%}}
+
+/* Account-management forms inherit the original Popcards modal style. */
+.online-sheet .account-section{border-top:1px solid #e8e8e8;margin-top:18px;padding-top:12px}
+.online-sheet .account-section h3{font-size:15px;margin:0 0 10px}
+.online-sheet .account-section>button{margin:4px 8px 4px 0}
+.online-sheet .online-text-link{display:block;background:none;border:none;color:#394a87;font:700 12px Quicksand, sans-serif;text-decoration:underline;padding:10px 0;cursor:pointer}
+.online-sheet .online-danger{border-color:#b42318;color:#b42318}
+.online-sheet .online-destructive{background:#b42318;color:#fff}
+.online-sheet input{width:100%;box-sizing:border-box;min-height:42px;padding:9px 11px;border-radius:10px;border:1.5px solid #d3d3d6}
+.online-sheet form>.act{margin-top:12px}
+
+/* Localized app language setting */
+.settings-language-note{display:block;padding:0 18px 8px;font-size:11px;line-height:1.45;color:#615d58}.settings-field select{max-width:100%}
